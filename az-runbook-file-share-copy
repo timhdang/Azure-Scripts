@@ -1,0 +1,57 @@
+
+try
+{
+    "Logging in to Azure..."
+    # For user-assigned managed identity
+    Connect-AzAccount -Identity -AccountId ""
+}
+catch {
+    Write-Error -Message $_.Exception
+    throw $_.Exception
+}
+try {
+    $response = Invoke-WebRequest -Uri "https://api.ipify.org" -UseBasicParsing
+    Write-Output "Runbook outbound IP address: $($response.Content)"
+
+
+   # Add the IP rule
+    Add-AzStorageAccountNetworkRule -ResourceGroupName "" -Name "" -IPAddressOrRange $($response.Content)
+   # Add the IP rule
+    Add-AzStorageAccountNetworkRule -ResourceGroupName "" -Name "timdstorageaccount1" -IPAddressOrRange $($response.Content)
+    # Update the default action to deny
+    Update-AzStorageAccountNetworkRuleSet -ResourceGroupName "" -Name "" -DefaultAction Allow
+    Update-AzStorageAccountNetworkRuleSet -ResourceGroupName "" -Name "" -DefaultAction Allow
+    Start-Sleep -Seconds 20
+}
+catch {
+    Write-Error "Failed to get IP address: $_"
+}
+#Source File Share
+$storageAccountNameFrom = ""
+$storageAccountKeyFrom = ""
+$fileShareNameFrom = ""
+$fileNameFrom = ""
+
+
+# Destination File Share
+$storageAccountNameTo = ""
+$storageAccountKeyTo = "="
+$fileShareNameTo = ""
+$fileName = ""
+
+
+# Create storage context using the storage account key
+$destCtx = New-AzStorageContext -StorageAccountName $storageAccountNameTo -StorageAccountKey $storageAccountKeyTo
+
+# Create storage context using the storage account key
+$srcCtx = New-AzStorageContext -StorageAccountName $storageAccountNameFrom -StorageAccountKey $storageAccountKeyFrom
+
+$dirName = "my-directory-3"
+New-AzStorageDirectory -ShareName $fileShareNameTo -Path $dirName -Context $destCtx
+
+try {
+Start-AzStorageFileCopy -SrcShareName $fileShareNameFrom -SrcFilePath "blackbeard.webp" -Context $srcCtx  -DestShareName $fileShareNameTo -DestFilePath "$dirName\blackbeard.webp" -DestContext $destCtx
+}
+catch {
+    Write-Output "Exception Message - $($_.Exception.Message)"
+}
