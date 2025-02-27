@@ -1,0 +1,25 @@
+Install-Module -Name Az.Storage
+#Source File Share
+$storageAccountNameFrom = ""
+$storageAccountKeyFrom = ""
+$fileShareNameFrom = ""
+$fileNameFrom = ""
+
+
+# Destination File Share
+$storageAccountNameTo = ""
+$storageAccountKeyTo = ""
+$fileShareNameTo = ""
+$fileName = ""
+
+
+# Create storage context using the storage account key
+$destCtx = New-AzStorageContext -StorageAccountName $storageAccountNameTo -StorageAccountKey $storageAccountKeyTo
+
+# Create storage context using the storage account key
+$srcCtx = New-AzStorageContext -StorageAccountName $storageAccountNameFrom -StorageAccountKey $storageAccountKeyFrom
+
+$dirName = "my-directory-2"
+New-AzStorageDirectory -ShareName $fileShareNameTo -Path $dirName -Context $destCtx
+
+Start-AzStorageFileCopy -SrcShareName $fileShareNameFrom -SrcFilePath "blackbeard.webp" -Context $srcCtx  -DestShareName $fileShareNameTo -DestFilePath "$dirName\blackbeard.webp" -DestContext $destCtx
